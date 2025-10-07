@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotización</title>
+    <!-- Bootstrap 5 -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body {
+            color: black;
+        }
+
+        table {
+            page-break-inside: auto;
+        }
+
+        tr,
+        td,
+        th {
+            page-break-inside: avoid !important;
+            page-break-after: auto;
+        }
+
+        .page-break {
+            page-break-before: always;
+            /* fuerza salto */
+            break-before: page;
+            /* soporte moderno */
+        }
+
+        .tabla-hoteles td:nth-child(1) {
+            width: 40%;
+            /* Nombre del hotel */
+        }
+
+        .tabla-hoteles td:nth-child(2) {
+            width: 30%;
+            /* Precio por persona */
+        }
+
+        .tabla-hoteles td:nth-child(3) {
+            width: 30%;
+            /* Precio total */
+        }
+
+
+        @font-face {
+            font-family: 'Caros';
+            src: url('./fonts/Caros.otf') format('opentype');
+            font-weight: 400;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Caros';
+            src: url('./fonts/Caros Medium.otf') format('opentype');
+            font-weight: 500;
+            font-style: normal;
+        }
+
+        @font-face {
+            font-family: 'Caros';
+            src: url('./fonts/Caros Bold.otf') format('opentype');
+            font-weight: 700;
+            font-style: normal;
+        }
+
+        .caros-regular {
+            font-family: 'Caros';
+            font-weight: 400;
+        }
+
+        .caros-medium {
+            font-family: 'Caros';
+            font-weight: 500;
+        }
+
+        .caros-bold {
+            font-family: 'Caros';
+            font-weight: 700;
+        }
+
+        .card-body {
+            background-color: transparent;
+        }
+
+        .table td,
+        .table th {
+            background-color: transparent !important;
+        }
+    </style>
+
+    <script>
+        function formatearFecha(fecha) {
+            const opciones = { day: 'numeric', month: 'long', year: 'numeric' };
+            return fecha.toLocaleDateString('es-ES', opciones);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            const hoy = new Date();
+            document.getElementById("fecha-cotizacion").textContent =
+                "Fecha De Cotizacion: " + formatearFecha(hoy);
+        });
+    </script>
+
+
+</head>
+
+<body class="bg-light">
+    <div class="container-fluid py-2">
+        <p id="fecha-cotizacion" class="fw-normal caros-regular mb-0" style="font-size:18px; text-align:right;"></p>
+    </div>
+    <div class="container my-5">
+        <div class="card card-body  border-0 rounded-4">
+
+
+            {% set nro_personas = adultos + ninos %}
+            {% set TRM_modificada = TRM + 100 %}
+            {% set dias_viaje = noches + 1 %}
+            {% set asistencia = 1.2 * nro_personas * dias_viaje * TRM_modificada * 1.15 %}
+            {% set asistencia_por_persona = asistencia / nro_personas %}
+
+            {% if nro_personas < 5 %} {% set recargo_personas=20 * TRM_modificada * 1.15 %} {% elif nro_personas < 7 %}
+                {% set recargo_personas=30 * TRM_modificada * 1.15 %} {% elif nro_personas < 13 %} {% set
+                recargo_personas=40 * TRM_modificada * 1.15 %} {% else %} {% set recargo_personas=(6 * Nro_Personas *
+                TRM) * 1.15 %} {% endif %} <!-- Encabezado -->
+                <div class="position-relative ">
+                    <img src="Banner.png" alt="Cotización {{ destino }}" class=" rounded w-100">
+                    <div class="position-absolute top-50 start-0 translate-middle-y text-white bg-opacity-50 p-4 rounded-3 "
+                        style="margin-left: 50px;">
+                        <p class="fw-normal mb-0 caros-regular" style="font-size: 30px;">Cotización a: </p>
+                        <p class="caros-bold" style="font-size: 50px; margin-top: -20px;">
+                            <strong>{{ destino }}</strong>
+                        </p>
+                        <p class="fw-semibold mb-0 caros-medium" style="font-size: 30px;">
+                            {{ adultos }} adultos{% if ninos > 0 %} y {{ ninos }} niños{% endif %}
+                        </p>
+                        <p class="fw-normal mb-0 caros-regular" style="font-size: 25px;">
+                            Fecha de viaje: {{ checkin }} al {{ checkout }}
+                        </p>
+                        <br>
+                        <p class="fw-semibold mb-0 caros-medium" style="font-size: 25px;">Presupuesto para el viaje
+                            desde:
+                        </p>
+
+                        {% if nro_personas > 1 %}
+                        {% set precio_vuelo_dividido = (precio_vuelo * 1.15) / nro_personas %}
+                        {% else %}
+                        {% set precio_vuelo_dividido = precio_vuelo * 1.15 %}
+                        {% endif %}
+
+                        {% if vuelo_ida.aerolinea == "Wingo" %}
+                        {% set precio_vuelo_dividido = precio_vuelo_dividido + (30000 * adultos) + (250000 * ninos) %}
+                        {% endif %}
+
+
+
+
+                        {% set valor_final_persona = ((hotel_base.habitaciones[0].precio_num ) / nro_personas)
+                        + precio_vuelo_dividido
+                        + asistencia_por_persona
+                        + ((recargo_personas ) / nro_personas) %}
+
+                        {% set valor_final_total = valor_final_persona * nro_personas %}
+
+
+                        <p class="fw-bold mb-0 caros-bold" style="font-size: 35px;">
+                            ${{ "{:,.0f}".format(((valor_final_persona / 1000)|round(0, 'ceil') * 1000)) }} COP x
+                            persona
+                        </p>
+                        <p class="fw-normal mb-0 caros-regular" style="font-size: 30px; margin-top: -15px;">
+                            (${{ "{:,.0f}".format(((valor_final_total / 1000)|round(0, 'ceil') * 1000)) }} COP en total)
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Servicios incluidos -->
+                <h4 class="fw-bold text-center caros-bold">Incluye:</h4>
+                <div class="row g-4 justify-content-center text-center fw-bold caros-medium">
+                    <div class="col-6 col-md-2 d-flex flex-column align-items-center">
+                        <img src="Vuelos.png" class="mb-2 rounded" alt="Vuelos"
+                            style="width:200px; height:250px; object-fit:contain;">
+                        <p class="mb-0 fw-semibold">Vuelos <br> ida y regreso</p>
+                    </div>
+                    <div class="col-6 col-md-2 d-flex flex-column align-items-center">
+                        <img src="Hoteles.png" class="mb-2 rounded" alt="Hotel"
+                            style="width:200px; height:250px; object-fit:contain;">
+                        <p class="mb-0 fw-semibold">Hotel</p>
+                    </div>
+                    <div class="col-6 col-md-2 d-flex flex-column align-items-center">
+                        <img src="Alimentación.png" class="mb-2 rounded" alt="Alimentación"
+                            style="width:200px; height:250px; object-fit:contain;">
+                        <p class="mb-0 fw-semibold">Alimentación<br> según hotel</p>
+                    </div>
+                    <div class="col-6 col-md-2 d-flex flex-column align-items-center">
+                        <img src="Traslados.png" class="mb-2 rounded" alt="Traslados"
+                            style="width:200px; height:250px; object-fit:contain;">
+                        <p class="mb-0 fw-semibold">Traslados <br> privados</p>
+                    </div>
+                    <div class="col-6 col-md-2 d-flex flex-column align-items-center">
+                        <img src="Asistencia.png" class="mb-2 rounded" alt="Asistencia"
+                            style="width:200px; height:250px; object-fit:contain;">
+                        <p class="mb-0 fw-semibold">Asistencia <br> médica</p>
+                    </div>
+                    <div class="col-6 col-md-2 d-flex flex-column align-items-center">
+                        <img src="Concierge.png" class="mb-2 rounded" alt="Concierge"
+                            style="width:200px; height:250px; object-fit:contain;">
+                        <p class="mb-0 fw-semibold">Concierge <br> (Asesor VIP)</p>
+                    </div>
+                </div>
+
+
+        </div>
+        <hr class="my-4" />
+
+        <!-- Hoteles Solo Desayuno -->
+        <div class="container-xl">
+            <h4 class="fw-bold mb-3 text-left caros-bold">Hoteles Solo Desayuno</h4>
+            <div class="table-responsive fw-semibold caros-medium">
+                <table class="table align-middle text-start table-borderless tabla-hoteles"
+                    style="background-color: transparent;">
+                    <tbody>
+                        {% set precio_final_base = ((hotel_base.habitaciones[0].precio_num ) / nro_personas) +
+                        precio_vuelo_dividido +
+                        asistencia_por_persona + ((recargo_personas ) / nro_personas) %}
+                        {% set total_base = precio_final_base * nro_personas %}
+                        <tr>
+                            <td>• <strong>{{ hotel_base.nombre }}</strong></td>
+                            <td><strong>${{ "{:,.0f}".format(((precio_final_base / 1000)|round(0, 'ceil') * 1000)) }}
+                                    COP x Persona</strong></td>
+                            <td><strong>(${{ "{:,.0f}".format(((total_base / 1000)|round(0, 'ceil') * 1000)) }} COP
+                                    Total)</strong></td>
+                        </tr>
+
+                        {% for hotel in hoteles_adicionales %}
+                        {% set precio_final = ((hotel.habitaciones[0].precio_num ) / nro_personas) +
+                        precio_vuelo_dividido +
+                        asistencia_por_persona +
+                        ((recargo_personas ) / nro_personas) %}
+                        {% set total = precio_final * nro_personas %}
+                        <tr>
+                            <td>• <strong>{{ hotel.nombre }}</strong></td>
+                            <td><strong>${{ "{:,.0f}".format(((precio_final / 1000)|round(0, 'ceil') * 1000)) }}
+                                    COP x Persona</strong>
+                            </td>
+                            <td><strong>(${{ "{:,.0f}".format(((total / 1000)|round(0, 'ceil') * 1000)) }} COP
+                                    Total)</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Hoteles Todo Incluido -->
+            {% if hoteles_todo_incluido %}
+            <h4 class="fw-bold mt-5 mb-3 text-left caros-bold">Hoteles Todo Incluido</h4>
+            <div class="table-responsive fw-semibold caros-medium">
+                <table class="table align-middle text-start table-borderless tabla-hoteles"
+                    style="background-color: transparent;">
+                    <tbody>
+                        {% for hotel in hoteles_todo_incluido %}
+                        {% set precio_final_ti = ((hotel.habitaciones[0].precio_num ) / nro_personas) +
+                        precio_vuelo_dividido +
+                        asistencia_por_persona +
+                        ((recargo_personas ) / nro_personas) %}
+                        {% set total_ti = precio_final_ti * nro_personas %}
+                        <tr>
+                            <td>• <strong>{{ hotel.nombre }}</strong></td>
+                            <td><strong>${{ "{:,.0f}".format(precio_final_ti|round(-3)) }} COP x Persona</strong></td>
+                            <td><strong>(${{ "{:,.0f}".format(total_ti|round(-3)) }} COP Total)</strong></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+        </div>
+        <div class="page-break"></div>
+
+        <!-- Vuelos seleccionados -->
+        <div class="position-relative mb-4 ">
+            <img src="Vuelos seleccionados.png" class="img-fluid rounded w-100">
+            <p id="contenido" class="fw-semibold caros-medium" style="white-space: pre-wrap;"></p>
+        </div>
+
+        <script>
+            function traducirMes(fechaStr) {
+                const meses = {
+                    January: "Enero",
+                    February: "Febrero",
+                    March: "Marzo",
+                    April: "Abril",
+                    May: "Mayo",
+                    June: "Junio",
+                    July: "Julio",
+                    August: "Agosto",
+                    September: "Septiembre",
+                    October: "Octubre",
+                    November: "Noviembre",
+                    December: "Diciembre"
+                };
+                return fechaStr.replace(
+                    /\b(January|February|March|April|May|June|July|August|September|October|November|December)\b/gi,
+                    m => meses[m]
+                );
+            }
+
+            function generarResumen(texto) {
+                const lineas = texto.split("\n").map(l => l.trim()).filter(Boolean);
+                const ida = lineas.find(l => l.startsWith("Vuelo de ida"));
+                const regreso = lineas.find(l => l.startsWith("Vuelo de regreso"));
+                let resumen = "";
+
+                // 👇 Insertamos origen/destino dinámicos que vienen desde Jinja
+                const origen = "{{ origen }}";
+                const destino = "{{ destino }}";
+
+                if (ida) {
+                    let fecha = ida.match(/ida:\s*(.*?)\s*-/i)?.[1] || "";
+                    fecha = traducirMes(fecha);
+                    const salida = ida.match(/Salida:\s*(.*?)\s*Llegada/i)?.[1] || "";
+                    const llegada = ida.match(/Llegada:\s*(.*?)\s*-/i)?.[1] || "";
+                    const tipo = ida.match(/Tipo:\s*(.*)/i)?.[1] || "";
+
+                    resumen += `Sales el día ${fecha} desde ${origen} a las ${salida} (debes estar en el aeropuerto 3 horas antes) llegando a ${destino} a las ${llegada}. Este vuelo es ${/Directo/i.test(tipo) ? "sin escalas" : "con escalas"}. `;
+                }
+
+                if (regreso) {
+                    let fecha = regreso.match(/regreso:\s*(.*?)\s*-/i)?.[1] || "";
+                    fecha = traducirMes(fecha);
+                    const salida = regreso.match(/Salida:\s*(.*?)\s*Llegada/i)?.[1] || "";
+                    const llegada = regreso.match(/Llegada:\s*(.*?)\s*-/i)?.[1] || "";
+                    const tipo = regreso.match(/Tipo:\s*(.*)/i)?.[1] || "";
+
+                    resumen += `<br><br>El regreso lo tendrías el día ${fecha} a las ${salida} (debes estar en el aeropuerto 3 horas antes) llegando a ${origen} a las ${llegada} en vuelo ${/Directo/i.test(tipo) ? "sin escalas" : "con escalas"}. `;
+                }
+
+                return resumen.replace(/\.\./g, ".");
+            }
+
+
+            window.onload = () => {
+                const p = document.getElementById("contenido");
+
+                const textoOriginal = `
+Vuelo de ida: {{ vuelo_ida.fecha }} - Aerolínea: {{ vuelo_ida.aerolinea }} - Salida: {{ vuelo_ida.hora_salida }} Llegada: {{ vuelo_ida.hora_llegada }} - Duración: {{ vuelo_ida.duracion }} - Tipo: {{ vuelo_ida.tipo }}
+Vuelo de regreso: {{ vuelo_regreso.fecha }} - Aerolínea: {{ vuelo_regreso.aerolinea }} - Salida: {{ vuelo_regreso.hora_salida }} Llegada: {{ vuelo_regreso.hora_llegada }} - Duración: {{ vuelo_regreso.duracion }} - Tipo: {{ vuelo_regreso.tipo }}
+Precio del vuelo: {{ precio_vuelo | string }}
+        `.trim();
+
+                const priceRegex = /^Precio del vuelo:\s*(.+)$/mi;
+                const priceMatch = textoOriginal.match(priceRegex);
+                if (priceMatch) {
+                    const valorPrecio = priceMatch[1].trim();
+                    window.precioVuelo = valorPrecio;
+
+                    const hidden = document.createElement("div");
+                    hidden.id = "precio-vuelo";
+                    hidden.dataset.precio = valorPrecio;
+                    hidden.style.display = "none";
+                    p.parentElement.appendChild(hidden);
+                }
+
+                const textoSinPrecio = textoOriginal
+                    .split("\n")
+                    .filter(l => !/^Precio del vuelo:/i.test(l.trim()))
+                    .map(l => traducirMes(l))
+                    .join("\n")
+                    .trim();
+
+
+                const resumen = generarResumen(textoOriginal);
+                p.innerHTML = `<strong>${textoSinPrecio}\n\n-----------------\n\n${resumen}</strong>`;
+            };
+        </script>
+
+
+        <!-- Condiciones -->
+        <div class="position-relative mb-4">
+            <img src="Condiciones.png" class="img-fluid rounded w-100">
+            <h2 class="text-center fw-bold  caros-bold">COTIZACION SUJETA A CAMBIOS SIN PREVIO AVISO</h2>
+            <p class=" fw-semibold caros-medium">
+                <strong>Precios vigentes al momento de realizar esta cotizacion, los precios aquí indicados pueden
+                    cambiar sin previo aviso, debido a diversos factores, tales como la oferta y la
+                    demanda,reprogramacion de rutas,
+                    entre otros. Los precios pueden sufrir un incremento (o reduccion) en el lapso entre el cual esta
+                    cotizacion es enviada y el momento de la emision de tiquetes y hoteles. <br><br>
+                    Se sugiere celeridad y no dejar pasar mucho tiempo entre el momento en que recibes la cotizacion y
+                    el momento en que realizas el pago,
+                    ya que así habra mucho menos probabilidad de que el precio incremente. <br><br>
+                    En caso de sufrir algun aumento de precios, nos comunicaremos contigo de manera inmediata para
+                    consultar si aceptas los nuevos
+                    precios o si en cambio deseas desistir del viaje o cambiar a fechas donde el precio
+                    sea igual o menor. En caso
+                    que
+                    decidas desistir del viaje recibirás tu dinero de vuelta en un lapso no mayor a 24 horas (
+                    generalmente
+                    de inmediato)</strong>
+            </p>
+
+        </div>
+
+        <div class="position-relative mb-4">
+            <h2 class="text-center fw-bold caros-bold">EQUIPO PROFESIONAL Y DE PRIMER NIVEL</h2>
+            <img src="Equipo.png" class="img-fluid rounded w-100">
+
+            <p class="fw-semibold caros-medium"><strong>Cuentas con un asesor preferencial que se hará cargo de todos
+                    los detalles
+                    de tu viaje, tu solo
+                    de debes por disfrutar. Somos mas de 30 personas a tu servicio en nuestras oﬁcinas de Bogotá y
+                    Medellín.Nos encargamos de toda la documentacion de tu viaje, te gestionamos cambios y
+                    modiﬁcaciones, te agendamos los mejores tours, tu solo empaca la maleta y presentate en el
+                    aeropuerto en la hora indicada, Nosotros nos encargamos del resto!</strong></p>
+
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+
+<footer>
+    <p class="text-center caros-regular"> <strong>Servicios sujetos a nuestros terminos y condiciones publicados en
+            www.viajavip.co/tyc</strong></p>
+</footer>
+
+</html>
